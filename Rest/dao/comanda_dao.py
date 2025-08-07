@@ -18,7 +18,8 @@ class ComandaDAO:
         return comanda
 
     @staticmethod
-    def update():
+    def update(comanda):
+        db.session.merge(comanda)
         db.session.commit()
 
     @staticmethod
