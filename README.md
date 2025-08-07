@@ -5,9 +5,9 @@ Inclui documentação interativa via Swagger UI.
 
 ## Funcionalidades
 
-- Cadastro, consulta e remoção de usuários (DAO)
+- Cadastro, consulta e remoção de usuários (Controller → Service → DAO)
 - Autenticação via JWT (login)
-- Cadastro, consulta, atualização e remoção de comandas com produtos (DAO)
+- Cadastro, consulta, atualização e remoção de comandas com produtos (Controller → Service → DAO)
 - Documentação Swagger UI
 
 ## Instalação
