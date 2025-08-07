@@ -5,6 +5,7 @@ from werkzeug.security import check_password_hash
 
 auth_bp = Blueprint('auth_bp', __name__)
 
+#Rota de login
 @auth_bp.route('/login', methods=['POST'])
 def login():
     dados = request.get_json()

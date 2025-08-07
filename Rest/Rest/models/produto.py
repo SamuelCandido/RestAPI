@@ -1,4 +1,3 @@
-# models/produto.py
 from extensions import db
 
 class Produto(db.Model):

@@ -4,13 +4,15 @@ from extensions import db
 from models.usuario import Usuario
 from models.produto import Produto
 from models.comanda import Comanda
+from dao.comanda_dao import ComandaDAO
 
 comanda_bp = Blueprint('comanda_bp', __name__)
 
-# LISTA todas as comandas (só dados do usuário)
+#____________________________________________________________________________________________________________________________________#
+# Busca todas, retorna comandas + usuaio
 @comanda_bp.route('/comandas', methods=['GET'])
 def listar_comandas():
-    comandas = Comanda.query.all()
+    comandas = ComandaDAO.get_all()
     resultado = []
     for comanda in comandas:
         resultado.append({
@@ -20,18 +22,18 @@ def listar_comandas():
         })
     return jsonify(resultado), 200
 
-# BUSCA comanda específica (usuário + produtos)
+#____________________________________________________________________________________________________________________________________#
+# Busca por id, retorna comanda + usuario + produtos
 @comanda_bp.route('/comandas/<int:id>', methods=['GET'])
 def obter_comanda(id):
-    comanda = Comanda.query.get(id)
+    comanda = ComandaDAO.get_by_id(id)
     if not comanda:
         return jsonify({'erro': 'Comanda nao encontrada.'}), 404
     return jsonify({
         "idUsuario": comanda.usuario.id,
         "nomeUsuario": comanda.usuario.nome,
         "telefoneUsuario": comanda.usuario.telefone,
-        "produtos": [
-            {
+        "produtos": [{
                 "id": produto.id,
                 "nome": produto.nome,
                 "preco": produto.preco
@@ -39,7 +41,8 @@ def obter_comanda(id):
         ]
     }), 200
 
-# CRIA comanda + produtos juntos
+#____________________________________________________________________________________________________________________________________#
+# Cria comanda + produtos 
 @comanda_bp.route('/comandas', methods=['POST'])
 @jwt_required()
 def criar_comanda():
@@ -63,13 +66,16 @@ def criar_comanda():
     produtos = []
     for p in produtos_data:
         produto = None
+
         if p.get('id'):
             produto = Produto.query.get(p.get('id'))
+
         if not produto:
             nome = p.get('nome')
             preco = p.get('preco')
             if not nome or preco is None:
                 continue
+
             produto = Produto(nome=nome, preco=preco)
             db.session.add(produto)
             db.session.flush()
@@ -79,27 +85,26 @@ def criar_comanda():
         return jsonify({'erro': 'Produtos invalidos.'}), 400
 
     comanda = Comanda(usuario=usuario, produtos=produtos)
-    db.session.add(comanda)
-    db.session.commit()
+    ComandaDAO.add(comanda)
 
     return jsonify({
         "idUsuario": usuario.id,
         "nomeUsuario": usuario.nome,
         "telefoneUsuario": usuario.telefone,
-        "produtos": [
-            {
-                "id": produto.id,
-                "nome": produto.nome,
-                "preco": produto.preco
-            } for produto in comanda.produtos
-        ]
+        "produtos": [{
+                            "id": produto.id,
+                            "nome": produto.nome,
+                            "preco": produto.preco
+                        } for produto in comanda.produtos
+                    ]
     }), 201
 
-# ATUALIZA produtos da comanda (JWT)
+#____________________________________________________________________________________________________________________________________#
+# Atualiza
 @comanda_bp.route('/comandas/<int:id>', methods=['PUT'])
 @jwt_required()
 def atualizar_comanda(id):
-    comanda = Comanda.query.get(id)
+    comanda = ComandaDAO.get_by_id(id)
     if not comanda:
         return jsonify({'erro': 'Comanda nao encontrada.'}), 404
 
@@ -111,21 +116,27 @@ def atualizar_comanda(id):
         novos_produtos = []
         for p in json_data['produtos']:
             produto = None
+
             if p.get('id'):
                 produto = Produto.query.get(p.get('id'))
+
             if not produto:
                 nome = p.get('nome')
                 preco = p.get('preco')
+
                 if not nome or preco is None:
                     continue
+
                 produto = Produto(nome=nome, preco=preco)
                 db.session.add(produto)
                 db.session.flush()
-            novos_produtos.append(produto)
-        if novos_produtos:
-            comanda.produtos = novos_produtos
 
-    db.session.commit()
+            novos_produtos.append(produto)
+
+        if novos_produtos:
+            comanda.produtos.extend([p for p in novos_produtos if p not in comanda.produtos])
+
+    ComandaDAO.update()
 
     return jsonify({
         "idUsuario": comanda.usuario.id,
@@ -140,13 +151,13 @@ def atualizar_comanda(id):
         ]
     }), 200
 
-# REMOVE uma comanda
+#____________________________________________________________________________________________________________________________________#
+# Delete
 @comanda_bp.route('/comandas/<int:id>', methods=['DELETE'])
 @jwt_required()
 def deletar_comanda(id):
-    comanda = Comanda.query.get(id)
+    comanda = ComandaDAO.get_by_id(id)
     if not comanda:
         return jsonify({'erro': 'Comanda nao encontrada.'}), 404
-    db.session.delete(comanda)
-    db.session.commit()
+    ComandaDAO.delete(comanda)
     return jsonify({"success": {"text": "comanda removida"}}), 200

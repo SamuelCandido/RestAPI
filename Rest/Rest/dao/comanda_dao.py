@@ -20,3 +20,8 @@ class ComandaDAO:
     @staticmethod
     def update():
         db.session.commit()
+
+    @staticmethod
+    def delete(comanda):
+        db.session.delete(comanda)
+        db.session.commit()

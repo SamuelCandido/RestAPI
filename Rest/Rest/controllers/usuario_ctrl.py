@@ -1,11 +1,11 @@
 from flask import Blueprint, request, jsonify
-from extensions import db
-from models.usuario import Usuario
 from werkzeug.security import generate_password_hash
 from flask_jwt_extended import create_access_token
+from dao.usuario_dao import UsuarioDAO
 
 usuario_bp = Blueprint('usuario_bp', __name__)
 
+#____________________________________________________________________________________________________________________________________#
 @usuario_bp.route('/usuarios', methods=['POST'])
 def criar_usuario():
     dados = request.get_json()
@@ -16,18 +16,17 @@ def criar_usuario():
     if not nome or not telefone or not senha:
         return jsonify({'erro': 'Nome, telefone e senha são obrigatórios.'}), 400
 
-    if Usuario.query.filter_by(nome=nome).first():
+    if UsuarioDAO.get_by_nome(nome):
         return jsonify({'erro': 'Nome de usuário já cadastrado.'}), 409
 
-    usuario = Usuario(
-        nome=nome,
-        telefone=telefone,
-        senha=generate_password_hash(senha)
+    usuario = UsuarioDAO.add(
+        type('Usuario', (), {})(
+            nome=nome,
+            telefone=telefone,
+            senha=generate_password_hash(senha)
+        )
     )
-    db.session.add(usuario)
-    db.session.commit()
 
-    # Gera o token JWT para o novo usuário
     token = create_access_token(identity=str(usuario.id))
 
     return jsonify({
@@ -35,10 +34,12 @@ def criar_usuario():
         'token': f'Bearer {token}'
     }), 201
 
+#____________________________________________________________________________________________________________________________________#
 @usuario_bp.route('/usuarios', methods=['GET'])
 def listar_usuarios():
-    usuarios = Usuario.query.all()
+    usuarios = UsuarioDAO.get_all()
     lista = []
+
     for u in usuarios:
         lista.append({
             'id': u.id,
@@ -47,28 +48,31 @@ def listar_usuarios():
         })
     return jsonify(lista), 200
 
+#____________________________________________________________________________________________________________________________________#
 @usuario_bp.route('/usuarios/<int:id>', methods=['GET'])
 def obter_usuario(id):
-    usuario = Usuario.query.get(id)
+    usuario = UsuarioDAO.get_by_id(id)
     if not usuario:
         return jsonify({'erro': 'Usuário não encontrado.'}), 404
+    
     return jsonify({
         'id': usuario.id,
         'nome': usuario.nome,
         'telefone': usuario.telefone
     }), 200
 
+#____________________________________________________________________________________________________________________________________#
 @usuario_bp.route('/usuarios/<int:id>', methods=['DELETE'])
 def deletar_usuario(id):
-    usuario = Usuario.query.get(id)
+    usuario = UsuarioDAO.get_by_id(id)
     if not usuario:
         return jsonify({'erro': 'Usuário não encontrado.'}), 404
-    db.session.delete(usuario)
-    db.session.commit()
+    
+    UsuarioDAO.delete(usuario)
     return jsonify({'mensagem': f'Usuário {id} removido com sucesso!'}), 200
 
+#____________________________________________________________________________________________________________________________________#
 @usuario_bp.route('/usuarios', methods=['DELETE'])
 def deletar_todos_usuarios():
-    Usuario.query.delete()
-    db.session.commit()
+    UsuarioDAO.delete_all()
     return jsonify({'mensagem': 'Todos os usuários foram removidos.'}), 200
