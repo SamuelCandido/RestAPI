@@ -5,9 +5,9 @@ Inclui documentação interativa via Swagger UI.
 
 ## Funcionalidades
 
-- Cadastro, consulta e remoção de usuários
+- Cadastro, consulta e remoção de usuários (DAO)
 - Autenticação via JWT (login)
-- Cadastro, consulta, atualização e remoção de comandas com produtos
+- Cadastro, consulta, atualização e remoção de comandas com produtos (DAO)
 - Documentação Swagger UI
 
 ## Instalação
@@ -67,6 +67,29 @@ POST /RestAPIFurb/comandas
 }
 ```
 
+### Atualização de Produtos da Comanda
+
+```json
+PUT /RestAPIFurb/comandas/1
+{
+  "produtos": [
+    {"id": 2, "nome": "X-Bacon", "preco": 35}
+  ]
+}
+```
+
+### Remoção de Usuário
+
+```json
+DELETE /RestAPIFurb/usuarios/1
+```
+
+### Remoção de Comanda
+
+```json
+DELETE /RestAPIFurb/comandas/1
+```
+
 ## Observações
 
 - O banco de dados é SQLite e já está configurado em `config.py`.
@@ -75,6 +98,7 @@ POST /RestAPIFurb/comandas
   ```
   Authorization: Bearer <seu_token>
   ```
+- Todos os acessos ao banco são feitos via DAOs (`UsuarioDAO`, `ComandaDAO`).
 
 ## Dependências
 
