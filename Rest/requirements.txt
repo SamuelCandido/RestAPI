@@ -1,7 +1,0 @@
-flask
-flask_sqlalchemy
-flask_marshmallow
-marshmallow-sqlalchemy
-flask-jwt-extended
-flasgger
-flask-cors
