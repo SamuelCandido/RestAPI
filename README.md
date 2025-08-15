@@ -14,7 +14,7 @@ Inclui documentação interativa via Swagger UI.
 
 1. Clone o repositório:
    ```sh
-   git clone https://github.com/seu-usuario/seu-repo.git
+   git clone https://github.com/SamuelCandido/RestAPI-Python.git
    cd Rest
    ```
 
